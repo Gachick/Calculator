@@ -257,7 +257,10 @@ double primary()
   case func:
     if (t.name == "sqrt")
     {
-      return sqrt(primary());
+      double arg = primary();
+      if (arg < 0)
+        error("'sqrt' can't take negative arguments");
+      return sqrt(arg);
     }
 
   case number:
