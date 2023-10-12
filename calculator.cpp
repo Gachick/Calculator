@@ -5,7 +5,7 @@
 
 // Типы лексем
 const char let = 'L';
-const char function = 'F';
+const char func = 'F';
 const char print = ';';
 const char number = '8';
 const char name = 'a';
@@ -51,7 +51,7 @@ public:
   void resetLine();
 
   template <typename... Args>
-  void error_with_putback(Token t, Args... args);
+  [[noreturn]] void error_with_putback(Token t, Args... args);
 };
 
 //------------------------------------------------------------------------------
@@ -253,6 +253,12 @@ double primary()
     return -primary();
   case '+':
     return +primary();
+
+  case func:
+    if (t.name == "sqrt")
+    {
+      return sqrt(primary());
+    }
 
   case number:
     return t.value;
