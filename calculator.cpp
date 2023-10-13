@@ -9,7 +9,6 @@ const char func = 'F';
 const char print = ';';
 const char number = '8';
 const char name = 'a';
-const char lend = 'e';
 const char quit = 'q';
 
 // Ключевые слова
@@ -37,6 +36,8 @@ struct Token
 
 class Token_stream
 {
+  stringstream stream{""};
+
   bool full{false};
   Token buffer{'\0'};
 
@@ -48,7 +49,7 @@ public:
   void ignore(char);
 
   bool lineEnded();
-  void resetLine();
+  void getNewLine();
 
   template <typename... Args>
   [[noreturn]] void error_with_putback(Token t, Args... args);
@@ -58,18 +59,16 @@ public:
 
 bool Token_stream::lineEnded()
 {
-  char next;
-  cin.get(next);
-  while (next == ' ')
-    cin.get(next);
-  if (next != '\n')
-    cin.unget();
-  return next == '\n';
+  stream.peek();
+  return stream.eof();
 }
 
-void Token_stream::resetLine()
+void Token_stream::getNewLine()
 {
-  cin.ignore(numeric_limits<streamsize>::max(), '\n');
+  string newLine;
+  getline(cin, newLine);
+  newLine += ";";
+  stream = stringstream{newLine};
 }
 
 void Token_stream::putback(Token t)
@@ -89,14 +88,11 @@ Token Token_stream::get()
     return buffer;
   }
 
-  if (cin.peek() == EOF)
-    return Token(quit);
-
   if (lineEnded())
     return Token(print);
 
   char ch;
-  cin >> ch;
+  stream >> ch;
 
   switch (ch)
   {
@@ -124,9 +120,9 @@ Token Token_stream::get()
   case '8':
   case '9':
   {
-    cin.putback(ch);
+    stream.putback(ch);
     double val;
-    cin >> val;
+    stream >> val;
     return Token(number, val);
   }
 
@@ -135,9 +131,9 @@ Token Token_stream::get()
     {
       string s;
       s += ch;
-      while (cin.get(ch) && (isalpha(ch) || isdigit(ch)))
+      while (stream.get(ch) && (isalpha(ch) || isdigit(ch)))
         s += ch;
-      cin.putback(ch);
+      stream.putback(ch);
 
       if (s == declkey)
         return Token(let);
@@ -165,7 +161,7 @@ void Token_stream::ignore(char c)
   }
   full = false;
 
-  for (char ch; !lineEnded() && cin >> ch;)
+  for (char ch; !lineEnded() && stream >> ch;)
   {
     if (ch == c)
       return;
@@ -380,13 +376,12 @@ void clean_up_mess()
 
 void calculate()
 {
-  cout << input_prompt;
   while (true)
   {
     if (ts.lineEnded())
     {
-      ts.resetLine();
       cout << input_prompt;
+      ts.getNewLine();
     }
     try
     {
