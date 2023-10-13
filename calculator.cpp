@@ -1,245 +1,44 @@
-
-#include "std_lib_facilities.h"
-
-//------------------------------------------------------------------------------
-
-// Типы лексем
-const char let = 'L';
-const char func = 'F';
-const char print = ';';
-const char number = '8';
-const char name = 'a';
-const char quit = 'q';
-
-// Ключевые слова
-const string declkey = "let";
-const string exitkey = "exit";
-
-// Функции
-const vector<string> func_list = {"sqrt", "pow"};
-
-// Приглашение и результат
-const string input_prompt = "> ";
-const string result_prompt = "= ";
+#include "calculator.h"
 
 //------------------------------------------------------------------------------
-
-struct Token
-{
-  char kind;
-  double value;
-  string name;
-  Token(char ch) : kind(ch), value(0) {}
-  Token(char ch, double val) : kind(ch), value(val) {}
-  Token(char ch, string val) : kind(ch), name(val) {}
-};
-
-class Token_stream
-{
-  stringstream stream{""};
-
-  bool full{false};
-  Token buffer{'\0'};
-
-public:
-  Token_stream() {}
-
-  Token get();
-  void putback(Token t);
-  void ignore(char);
-
-  bool lineEnded();
-  void getNewLine();
-
-  template <typename... Args>
-  [[noreturn]] void error_with_putback(Token t, Args... args);
-};
-
-//------------------------------------------------------------------------------
-
-bool Token_stream::lineEnded()
-{
-  stream.peek();
-  return stream.eof();
-}
-
-void Token_stream::getNewLine()
-{
-  string newLine;
-  getline(cin, newLine);
-  newLine += ";";
-  stream = stringstream{newLine};
-}
-
-void Token_stream::putback(Token t)
-{
-  if (full)
-    error("putback() into a full buffer");
-
-  buffer = t;
-  full = true;
-}
-
-Token Token_stream::get()
-{
-  if (full)
-  {
-    full = false;
-    return buffer;
-  }
-
-  if (lineEnded())
-    return Token(print);
-
-  char ch;
-  stream >> ch;
-
-  switch (ch)
-  {
-  case '(':
-  case ')':
-  case '+':
-  case '-':
-  case '*':
-  case '/':
-  case '%':
-  case ';':
-  case '=':
-  case ',':
-    return Token(ch);
-
-  case '.':
-  case '0':
-  case '1':
-  case '2':
-  case '3':
-  case '4':
-  case '5':
-  case '6':
-  case '7':
-  case '8':
-  case '9':
-  {
-    stream.putback(ch);
-    double val;
-    stream >> val;
-    return Token(number, val);
-  }
-
-  default:
-    if (isalpha(ch))
-    {
-      string s;
-      s += ch;
-      while (stream.get(ch) && (isalpha(ch) || isdigit(ch)))
-        s += ch;
-      stream.putback(ch);
-
-      if (s == declkey)
-        return Token(let);
-      if (s == exitkey)
-        return Token(quit);
-
-      for (string func : func_list)
-      {
-        if (s == func)
-          return Token('F', func);
-      }
-
-      return Token(name, s);
-    }
-    error("Bad token");
-  }
-}
-
-void Token_stream::ignore(char c)
-{
-  if (full && c == buffer.kind)
-  {
-    full = false;
-    return;
-  }
-  full = false;
-
-  for (char ch; !lineEnded() && stream >> ch;)
-  {
-    if (ch == c)
-      return;
-  }
-}
-
-template <typename... Args>
-void Token_stream::error_with_putback(Token t, Args... args)
-{
-  putback(t);
-  error(args...);
-}
 
 Token_stream ts;
+VariableList varList;
 
 //------------------------------------------------------------------------------
+// Helper functions available in calculator
+//------------------------------------------------------------------------------
 
-struct Variable
+double sqrt_calc()
 {
-  string name;
-  double value;
-  Variable(string n, double v) : name(n), value(v) {}
-};
-
-vector<Variable> var_table;
-
-double get_value(const string &s)
-{
-  for (const auto &var : var_table)
-  {
-    if (var.name == s)
-      return var.value;
-  }
-
-  error("get: undefined name ", s);
+  double arg = primary();
+  if (arg < 0)
+    error("'sqrt' can't take negative arguments");
+  return sqrt(arg);
 }
 
-void set_value(const string &s, double d)
+double pow_calc()
 {
-  for (auto &var : var_table)
-  {
-    if (var.name == s)
-    {
-      var.value = d;
-      return;
-    }
-  }
+  Token t = ts.get();
+  if (t.kind != '(')
+    ts.error_with_putback(t, "'pow' expected an opening bracket");
 
-  error("set: undefined name ", s);
-}
+  double left = expression();
+  t = ts.get();
+  if (t.kind != ',')
+    ts.error_with_putback(t, "'pow' expected a coma");
 
-bool is_declared(const string &s)
-{
-  for (const auto &var : var_table)
-  {
-    if (var.name == s)
-      return true;
-  }
+  double right = expression();
+  t = ts.get();
+  if (t.kind != ')')
+    ts.error_with_putback(t, "'pow' expected a closing bracket");
 
-  return false;
-}
-
-double define_name(const string &var, double val)
-{
-  if (is_declared(var))
-    error(var, " declared twice");
-
-  var_table.push_back(Variable{var, val});
-
-  return val;
+  return pow(left, right);
 }
 
 //------------------------------------------------------------------------------
-double sqrt_calc();
-double pow_calc();
+// Calculator grammar
 //------------------------------------------------------------------------------
-
-double expression();
 
 double primary()
 {
@@ -270,7 +69,7 @@ double primary()
     return t.value;
 
   case name:
-    return get_value(t.name);
+    return varList.get_value(t.name);
 
   default:
     ts.error_with_putback(t, "primary expected");
@@ -346,14 +145,14 @@ double declaration()
     ts.error_with_putback(t, "name expected in declaration");
 
   string var = t.name;
-  if (is_declared(var))
+  if (varList.is_declared(var))
     ts.error_with_putback(t, var, " declared twice");
 
   t = ts.get();
   if (t.kind != '=')
     ts.error_with_putback(t, "'=' missing in declaration of ", var);
 
-  return define_name(var, expression());
+  return varList.define_name(var, expression());
 }
 
 double statement()
@@ -367,11 +166,6 @@ double statement()
     ts.putback(t);
     return expression();
   }
-}
-
-void clean_up_mess()
-{
-  ts.ignore(print);
 }
 
 void calculate()
@@ -394,41 +188,12 @@ void calculate()
       double result = statement();
       cout << result_prompt << result << endl;
     }
-    catch (runtime_error &e)
+    catch (runtime_error &err)
     {
-      cerr << e.what() << endl;
-      clean_up_mess();
+      cerr << err.what() << endl;
+      ts.ignore(print);
     }
   }
-}
-
-//------------------------------------------------------------------------------
-
-double sqrt_calc()
-{
-  double arg = primary();
-  if (arg < 0)
-    error("'sqrt' can't take negative arguments");
-  return sqrt(arg);
-}
-
-double pow_calc()
-{
-  Token t = ts.get();
-  if (t.kind != '(')
-    ts.error_with_putback(t, "'pow' expected an opening bracket");
-
-  double left = expression();
-  t = ts.get();
-  if (t.kind != ',')
-    ts.error_with_putback(t, "'pow' expected a coma");
-
-  double right = expression();
-  t = ts.get();
-  if (t.kind != ')')
-    ts.error_with_putback(t, "'pow' expected a closing bracket");
-
-  return pow(left, right);
 }
 
 //------------------------------------------------------------------------------
@@ -436,14 +201,14 @@ double pow_calc()
 int main()
 try
 {
-  define_name("pi", 3.141592653589793);
-  define_name("e", 2.718281828459045);
+  varList.define_name("pi", 3.141592653589793);
+  varList.define_name("e", 2.718281828459045);
 
   calculate();
 }
-catch (exception &e)
+catch (exception &err)
 {
-  cerr << "exception: " << e.what() << endl;
+  cerr << "exception: " << err.what() << endl;
   return 1;
 }
 catch (...)
