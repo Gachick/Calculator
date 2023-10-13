@@ -180,8 +180,8 @@ void calculate()
     try
     {
       Token t = ts.get();
-      while (t.kind == print)
-        t = ts.get();
+      if (t.kind == print)
+        continue;
       if (t.kind == quit)
         return;
       ts.putback(t);

@@ -9,6 +9,10 @@ bool Token_stream::lineEnded()
 void Token_stream::getNewLine()
 {
     string newLine;
+
+    if (cin.eof())
+        throw runtime_error("End of input");
+
     getline(cin, newLine);
     newLine += ";";
     stream = stringstream{newLine};
@@ -48,7 +52,6 @@ Token Token_stream::get()
     case '%':
     case ';':
     case '=':
-    case ',':
         return Token(ch);
 
     case '.':

@@ -1,0 +1,69 @@
+> = 3
+> = 4
+> = 12
+> = 0.833333
+> = 2
+> = 16
+> = 18
+> = 2.3305e+12
+> = 1001
+> = 4e-06
+> = 26
+= 0.8
+= 15
+> = 112
+= 4
+> = 3
+= 4.66667
+> = 4
+> primary expected
+> primary expected
+> = 4
+> 'sqrt' can't take negative arguments
+> = 16
+> Bad token
+> 'pow' expected an opening bracket
+> primary expected
+primary expected
+> Bad token
+> Bad token
+Bad token
+> name expected in declaration
+> get: undefined name le
+> '=' missing in declaration of r
+> primary expected
+> = 5
+= 25
+> = 2.23607
+> Bad token
+> get: undefined name jbdgklhdslgs
+get: undefined name dalg
+get: undefined name sdnflm
+get: undefined name aslkf
+> = 3
+> primary expected
+> primary expected
+> get: undefined name aboba
+> get: undefined name Lorem
+> Bad token
+> name expected in declaration
+= 2
+> name expected in declaration
+Bad token
+> name expected in declaration
+> Bad token
+> primary expected
+> primary expected
+> primary expected
+> name expected in declaration
+> name expected in declaration
+> get: undefined name letr
+> = 4
+> = 4
+j declared twice
+> = 6
+= 6
+primary expected
+> = 2
+primary expected
+> exception: End of input
