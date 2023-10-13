@@ -17,7 +17,7 @@ const string declkey = "let";
 const string exitkey = "exit";
 
 // Функции
-const vector<string> func_list = {"sqrt"};
+const vector<string> func_list = {"sqrt", "pow"};
 
 // Приглашение и результат
 const string input_prompt = "> ";
@@ -58,7 +58,13 @@ public:
 
 bool Token_stream::lineEnded()
 {
-  return cin.peek() == '\n';
+  char next;
+  cin.get(next);
+  while (next == ' ')
+    cin.get(next);
+  if (next != '\n')
+    cin.unget();
+  return next == '\n';
 }
 
 void Token_stream::resetLine()
@@ -103,6 +109,7 @@ Token Token_stream::get()
   case '%':
   case ';':
   case '=':
+  case ',':
     return Token(ch);
 
   case '.':
@@ -232,6 +239,9 @@ double define_name(const string &var, double val)
 }
 
 //------------------------------------------------------------------------------
+double sqrt_calc();
+double pow_calc();
+//------------------------------------------------------------------------------
 
 double expression();
 
@@ -256,12 +266,9 @@ double primary()
 
   case func:
     if (t.name == "sqrt")
-    {
-      double arg = primary();
-      if (arg < 0)
-        error("'sqrt' can't take negative arguments");
-      return sqrt(arg);
-    }
+      return sqrt_calc();
+    else if (t.name == "pow")
+      return pow_calc();
 
   case number:
     return t.value;
@@ -368,8 +375,7 @@ double statement()
 
 void clean_up_mess()
 {
-  if (!ts.lineEnded())
-    ts.ignore(print);
+  ts.ignore(print);
 }
 
 void calculate()
@@ -399,6 +405,35 @@ void calculate()
       clean_up_mess();
     }
   }
+}
+
+//------------------------------------------------------------------------------
+
+double sqrt_calc()
+{
+  double arg = primary();
+  if (arg < 0)
+    error("'sqrt' can't take negative arguments");
+  return sqrt(arg);
+}
+
+double pow_calc()
+{
+  Token t = ts.get();
+  if (t.kind != '(')
+    ts.error_with_putback(t, "'pow' expected an opening bracket");
+
+  double left = expression();
+  t = ts.get();
+  if (t.kind != ',')
+    ts.error_with_putback(t, "'pow' expected a coma");
+
+  double right = expression();
+  t = ts.get();
+  if (t.kind != ')')
+    ts.error_with_putback(t, "'pow' expected a closing bracket");
+
+  return pow(left, right);
 }
 
 //------------------------------------------------------------------------------
