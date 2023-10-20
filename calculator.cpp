@@ -9,7 +9,7 @@ VariableList varList;
 // Helper functions available in calculator
 //------------------------------------------------------------------------------
 
-double sqrt_calc()
+double sqrtCalc()
 {
   double arg = primary();
   if (arg < 0)
@@ -17,7 +17,7 @@ double sqrt_calc()
   return sqrt(arg);
 }
 
-double pow_calc()
+double powCalc()
 {
   Token t = ts.get();
   if (t.kind != '(')
@@ -36,11 +36,50 @@ double pow_calc()
   return pow(left, right);
 }
 
+double tgCalc()
+{
+  double arg = primary();
+  return tan(arg);
+}
+
+double ctgCalc()
+{
+  double arg = primary();
+  return 1 / tan(arg);
+}
+
+double arcctgCalc()
+{
+  double arg = primary();
+  return M_PI_2 - atan(arg);
+}
+
+double sumCalc()
+{
+  double res = 0;
+
+  Token t = ts.get();
+  if (t.kind != '(')
+    ts.error_with_putback(t, "'sum' expected an opening bracket");
+
+  while (t.kind != ')')
+  {
+    double arg = expression();
+    res += arg;
+    t = ts.get();
+    if (t.kind != ',' && t.kind != ')')
+      ts.error_with_putback(t, " invalid argument in 'sum'");
+  }
+
+  return res;
+}
+
 //------------------------------------------------------------------------------
 // Calculator grammar
 //------------------------------------------------------------------------------
 
-double primary()
+double
+primary()
 {
   Token t = ts.get();
   switch (t.kind)
@@ -50,7 +89,7 @@ double primary()
     double d = expression();
     t = ts.get();
     if (t.kind != ')')
-      ts.error_with_putback(t, "'(' expected");
+      ts.error_with_putback(t, "')' expected");
     return d;
   }
 
@@ -61,9 +100,17 @@ double primary()
 
   case func:
     if (t.name == "sqrt")
-      return sqrt_calc();
+      return sqrtCalc();
     else if (t.name == "pow")
-      return pow_calc();
+      return powCalc();
+    else if (t.name == "tg")
+      return tgCalc();
+    else if (t.name == "ctg")
+      return ctgCalc();
+    else if (t.name == "arcctg")
+      return arcctgCalc();
+    else if (t.name == "sum")
+      return sumCalc();
 
   case number:
     return t.value;
@@ -157,15 +204,21 @@ double declaration()
 
 double statement()
 {
+  double res = 0;
   Token t = ts.get();
   switch (t.kind)
   {
   case let:
-    return declaration();
+    res = declaration();
+    break;
   default:
     ts.putback(t);
-    return expression();
+    res = expression();
   }
+  t = ts.get();
+  if (t.kind != ';')
+    ts.error_with_putback(t, "invalid statement");
+  return res;
 }
 
 void calculate()
@@ -185,6 +238,7 @@ void calculate()
       if (t.kind == quit)
         return;
       ts.putback(t);
+
       double result = statement();
       cout << result_prompt << result << endl;
     }
@@ -197,12 +251,14 @@ void calculate()
 }
 
 //------------------------------------------------------------------------------
+#define E 2.718281828459045
+#define PI 3.141592653589793
 
 int main()
 try
 {
-  varList.define_name("pi", 3.141592653589793);
-  varList.define_name("e", 2.718281828459045);
+  varList.define_name("pi", PI);
+  varList.define_name("e", E);
 
   calculate();
 }

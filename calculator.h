@@ -7,7 +7,7 @@
 //------------------------------------------------------------------------------
 
 // List of available funcions
-const vector<string> func_list = {"sqrt", "pow"};
+const vector<string> func_list = {"sqrt", "pow", "tg", "ctg", "sum", "arcctg"};
 
 // Prompts
 const string input_prompt = "> ";
@@ -17,8 +17,12 @@ const string result_prompt = "= ";
 // Helper functions available in calculator
 //------------------------------------------------------------------------------
 
-double sqrt_calc();
-double pow_calc();
+double sqrtCalc();
+double powCalc();
+double tgCalc();
+double ctgCalc();
+double sumCalc();
+double arcctgCalc();
 
 //------------------------------------------------------------------------------
 // Calculator grammar

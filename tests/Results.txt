@@ -21,11 +21,11 @@
 > = 4
 > 'sqrt' can't take negative arguments
 > = 16
-> Bad token
+> = 16
 > 'pow' expected an opening bracket
 > primary expected
 primary expected
-> Bad token
+> = 64
 > Bad token
 Bad token
 > name expected in declaration
@@ -35,7 +35,7 @@ Bad token
 > = 5
 = 25
 > = 2.23607
-> Bad token
+> = 36.5548
 > get: undefined name jbdgklhdslgs
 get: undefined name dalg
 get: undefined name sdnflm
@@ -45,11 +45,11 @@ get: undefined name aslkf
 > primary expected
 > get: undefined name aboba
 > get: undefined name Lorem
-> Bad token
+> invalid statement
 > name expected in declaration
 = 2
 > name expected in declaration
-Bad token
+= 81
 > name expected in declaration
 > Bad token
 > primary expected
@@ -62,8 +62,20 @@ Bad token
 > = 4
 j declared twice
 > = 6
-= 6
-primary expected
-> = 2
-primary expected
+invalid statement
+> invalid statement
+> name expected in declaration
+> name expected in declaration
+> '=' missing in declaration of test
+> primary expected
+> get: undefined name sin
+> Bad token
+> primary expected
+> divide by zero
+> = -1e+08
+> 'sqrt' can't take negative arguments
+> = 1
+> = -1
+> = 18
+> = 0.785398
 > exception: End of input

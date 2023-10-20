@@ -52,6 +52,7 @@ Token Token_stream::get()
     case '%':
     case ';':
     case '=':
+    case ',':
         return Token(ch);
 
     case '.':
